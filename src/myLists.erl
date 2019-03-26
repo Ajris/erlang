@@ -9,10 +9,16 @@
 -module(myLists).
 -author("ajris").
 
+-record(grupa, {nazwa, licznosc, stan=aktywna}).
+
 %% API
 -export([contains/2]).
 -export([duplicateElements/1]).
 -export([sumFloats/1]).
+-export([isDividedBy3Or5/1]).
+
+isDividedBy3Or5(Value) -> Value rem 5 == 0 orelse Value rem 3 == 0;
+isDividedBy3Or5(_) -> false.
 
 contains(Value, [Head | Tail]) -> Value == Head orelse contains(Value, Tail);
 contains(_, []) -> false.

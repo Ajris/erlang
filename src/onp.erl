@@ -68,9 +68,14 @@ calculate(["cos" | T], Stack) ->
   calculate(T, Numbers);
 
 calculate([H | T], Stack) ->
-  Numbers = [list_to_float(H) | Stack],
+  Numbers = [convertToNumber(H) | Stack],
   calculate(T, Numbers).
 
+convertToNumber(X) ->
+  case string:to_float(X) of
+    {error, _} -> list_to_integer(X);
+    {Num, _} -> Num
+  end.
 
 onp(Input) ->
   A = string:tokens(Input, " "),
