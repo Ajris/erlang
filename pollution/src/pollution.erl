@@ -35,7 +35,7 @@ test() ->
   P6 = addValue({4, 5}, calendar:local_time(), pm25, "Wartosc", P5),
   P7 = addValue({4, 5}, calendar:local_time(), temp, "Wartosc", P6),
   P8 = addValue({3, 4}, calendar:local_time(), temp, "Wartosc", P7),
-  P9 = addValue("Stacja4", calendar:local_time(), pm10, "Wartosc", P8),
+  P9 = addValue("Stacja3", calendar:local_time(), pm10, "Wartosc", P8),
   P10 = removeValue({4,5}, calendar:local_time(), pm10, P9),
   LastStation = lists:last(P10#monitor.stations),
   lists:flatlength(LastStation#station.measurements)
@@ -103,16 +103,26 @@ addValue(Name, Date, Type, Value, Monitor) ->
     [CurrentStation] ->
       case isGoodType(Type) of
         true ->
-          Measurement = #measurement{station = CurrentStation, date = Date, type = Type, value = Value},
-          ActualizedMeasurements = CurrentStation#station.measurements ++ [Measurement],
+          Measurements = CurrentStation#station.measurements,
+          ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+          case ResultMeasurement of
+            [] ->
+              Measurement = #measurement{station = CurrentStation, date = Date, type = Type, value = Value},
+              ActualizedMeasurements = CurrentStation#station.measurements ++ [Measurement],
+              NewCurrentStation = CurrentStation#station{
+                measurements = ActualizedMeasurements
+              },
+              ActualizedStation = lists:delete(CurrentStation, Monitor#monitor.stations) ++ [NewCurrentStation],
+              Monitor#monitor{
+                stations = ActualizedStation
+              };
 
-          NewCurrentStation = CurrentStation#station{
-            measurements = ActualizedMeasurements
-          },
-          ActualizedStation = lists:delete(CurrentStation, Monitor#monitor.stations) ++ [NewCurrentStation],
-          Monitor#monitor{
-            stations = ActualizedStation
-          };
+            [CurrentMeasurement | Tail] ->
+              erlang:error("Something went wrong");
+            [_] -> erlang:error("Something went wrong")
+          end;
+
+
         false ->
           erlang:error("Wrong type")
       end
@@ -129,12 +139,11 @@ removeValue({X, Y}, Date, Type, Monitor) ->
       case isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
-          [ResultMeasurementHead | Tail] = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
-          ResultMeasurement = [ResultMeasurementHead],
+          ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
           case ResultMeasurement of
             [] ->
               erlang:error("No measurement found");
-            [CurrentMeasurement] ->
+            [CurrentMeasurement | Tail] ->
               ActualizedMeasurements = lists:delete(CurrentMeasurement, CurrentStation#station.measurements),
 
               NewCurrentStation = CurrentStation#station{
@@ -162,12 +171,11 @@ removeValue(Name, Date, Type, Monitor) ->
       case isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
-          [ResultMeasurementHead | Tail] = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
-          ResultMeasurement = [ResultMeasurementHead],
+          ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
           case ResultMeasurement of
             [] ->
               erlang:error("No measurement found");
-            [CurrentMeasurement] ->
+            [CurrentMeasurement | Tail] ->
               ActualizedMeasurements = lists:delete(CurrentMeasurement, CurrentStation#station.measurements),
 
               NewCurrentStation = CurrentStation#station{
