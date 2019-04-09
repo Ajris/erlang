@@ -35,7 +35,8 @@ test() ->
   P6 = addValue({4, 5}, calendar:local_time(), "Typ1", "Wartosc", P5),
   P7 = addValue({4, 5}, calendar:local_time(), "Typ2", "Wartosc", P6),
   P8 = addValue({4, 5}, calendar:local_time(), "Typ3", "Wartosc", P7),
-  LastStation = lists:last(P8#monitor.stations),
+  P9 = addValue("Stacja4", calendar:local_time(), "Typ4", "Wartosc", P8),
+  LastStation = lists:last(P9#monitor.stations),
   lists:flatlength(LastStation#station.measurements)
 .
 
@@ -71,5 +72,24 @@ addValue({X, Y}, Date, Type, Value, Monitor) ->
   end;
 
 addValue(Name, Date, Type, Value, Monitor) ->
-  erlang:error(not_implemented).
+  [Stations] = [Monitor#monitor.stations],
+  Result = lists:filter(fun(Station) -> (Station#station.name == Name) end, Stations),
+  case Result of
+    [] ->
+      erlang:error("Coudln't find that station with provided X and Y");
+    [Current] ->
+      Measurement = #measurement{station = Current, date = Date, type = Type, value = Value},
+      ActualizedMeasurements = Current#station.measurements ++ [Measurement],
+
+      NewCurrent = Current#station{
+        measurements = ActualizedMeasurements
+      },
+      ActualizedStation = lists:delete(Current,Monitor#monitor.stations) ++ [NewCurrent],
+      Monitor#monitor{
+        stations = ActualizedStation
+      };
+    _ ->
+      erlang:error("If this goes here I am out")
+  end
+.
 
