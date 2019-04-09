@@ -18,7 +18,7 @@
 -export([getOneValue/4]).
 -export([getStationMean/3]).
 -export([getDailyMean/3]).
--export([getDailyAverageDataCount/3]).
+-export([getDailyAverageDataCount/2]).
 
 -record(monitor, {stations = []}).
 -record(station, {name, coords, measurements = []}).
@@ -40,11 +40,13 @@ test() ->
   P10 = removeValue({4, 5}, calendar:local_time(), pm10, P9),
   P11 = addValue({4, 5}, {{2019, 2, 2}, {2, 2, 2}}, pm25, 15, P10),
   P12 = addValue({1, 2}, {{2019, 2, 2}, {2, 2, 2}}, pm25, 10, P11),
+  P13 = addValue({2, 3}, {{2019, 2, 2}, {2, 2, 2}}, pm25, 10, P12),
   LastStation = lists:last(P10#monitor.stations),
   lists:flatlength(LastStation#station.measurements),
   getOneValue(pm25, Station, calendar:local_time(), P10),
   getStationMean(pm25, Station, P11),
-  getDailyMean(pm25, {{2019, 2, 2}, {2, 2, 2}}, P12)
+  getDailyMean(pm25, {{2019, 2, 2}, {2, 2, 2}}, P12),
+  getDailyAverageDataCount({{2019, 2, 2}, {2, 2, 2}}, P13)
 .
 
 createMonitor() ->
@@ -247,5 +249,9 @@ getDailyMean(Type, Date, Monitor) ->
 mean([]) -> erlang:error("Wrong man");
 mean(Values) -> lists:sum(Values) / length(Values).
 
-getDailyAverageDataCount(Date, Type, Monitor) ->
-  erlang:error(not_implemented).
+getDailyAverageDataCount(Date, Monitor) ->
+  Stations = Monitor#monitor.stations,
+  Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
+  FilteredMeasurements = lists:filter(fun(X) -> (X#measurement.date == Date) end, Measurements),
+  lists:flatlength(FilteredMeasurements)/lists:flatlength(Stations)
+.
