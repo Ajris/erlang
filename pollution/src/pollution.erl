@@ -15,30 +15,36 @@
 -export([addStation/3]).
 -export([addValue/5]).
 -export([removeValue/4]).
-%%-export([getOneValue/4]).
-%%-export([getStationMean/3]).
-%%-export([getDailyMean/3]).
-%%-export([getDailyAverageDataCount/3]).
+-export([getOneValue/4]).
+-export([getStationMean/3]).
+-export([getDailyMean/3]).
+-export([getDailyAverageDataCount/3]).
 
 -record(monitor, {stations = []}).
 -record(station, {name, coords, measurements = []}).
--record(measurement, {station, date, type, value}).
+-record(measurement, {date, type, value}).
 -record(coords, {x, y}).
 
 test() ->
+  Station = #station{name = "Stacja4", coords = {4, 5}},
   P = createMonitor(),
   P1 = addStation("Stacja1", {1, 2}, P),
   P2 = addStation("Stacja2", {2, 3}, P1),
   P3 = addStation("Stacja3", {3, 4}, P2),
   P4 = addStation("Stacja4", {4, 5}, P3),
-  P5 = addValue({4, 5}, calendar:local_time(), pm10, "Wartosc", P4),
-  P6 = addValue({4, 5}, calendar:local_time(), pm25, "Wartosc", P5),
-  P7 = addValue({4, 5}, calendar:local_time(), temp, "Wartosc", P6),
-  P8 = addValue({3, 4}, calendar:local_time(), temp, "Wartosc", P7),
-  P9 = addValue("Stacja3", calendar:local_time(), pm10, "Wartosc", P8),
-  P10 = removeValue({4,5}, calendar:local_time(), pm10, P9),
+  P5 = addValue({4, 5}, calendar:local_time(), pm10, 5, P4),
+  P6 = addValue({4, 5}, calendar:local_time(), pm25, 6, P5),
+  P7 = addValue({4, 5}, calendar:local_time(), temp, 7, P6),
+  P8 = addValue({3, 4}, calendar:local_time(), temp, 8, P7),
+  P9 = addValue("Stacja3", calendar:local_time(), pm10, 9, P8),
+  P10 = removeValue({4, 5}, calendar:local_time(), pm10, P9),
+  P11 = addValue({4, 5}, {{2019, 2, 2}, {2, 2, 2}}, pm25, 15, P10),
+  P12 = addValue({1, 2}, {{2019, 2, 2}, {2, 2, 2}}, pm25, 10, P11),
   LastStation = lists:last(P10#monitor.stations),
-  lists:flatlength(LastStation#station.measurements)
+  lists:flatlength(LastStation#station.measurements),
+  getOneValue(pm25, Station, calendar:local_time(), P10),
+  getStationMean(pm25, Station, P11),
+  getDailyMean(pm25, {{2019, 2, 2}, {2, 2, 2}}, P12)
 .
 
 createMonitor() ->
@@ -70,10 +76,11 @@ addValue({X, Y}, Date, Type, Value, Monitor) ->
       case isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+          ResultMeasurement = lists:filter(fun(Measurement) ->
+            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
           case ResultMeasurement of
             [] ->
-              Measurement = #measurement{station = CurrentStation, date = Date, type = Type, value = Value},
+              Measurement = #measurement{date = Date, type = Type, value = Value},
               ActualizedMeasurements = CurrentStation#station.measurements ++ [Measurement],
               NewCurrentStation = CurrentStation#station{
                 measurements = ActualizedMeasurements
@@ -104,10 +111,11 @@ addValue(Name, Date, Type, Value, Monitor) ->
       case isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+          ResultMeasurement = lists:filter(fun(Measurement) ->
+            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
           case ResultMeasurement of
             [] ->
-              Measurement = #measurement{station = CurrentStation, date = Date, type = Type, value = Value},
+              Measurement = #measurement{date = Date, type = Type, value = Value},
               ActualizedMeasurements = CurrentStation#station.measurements ++ [Measurement],
               NewCurrentStation = CurrentStation#station{
                 measurements = ActualizedMeasurements
@@ -139,7 +147,8 @@ removeValue({X, Y}, Date, Type, Monitor) ->
       case isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+          ResultMeasurement = lists:filter(fun(Measurement) ->
+            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
           case ResultMeasurement of
             [] ->
               erlang:error("No measurement found");
@@ -171,7 +180,8 @@ removeValue(Name, Date, Type, Monitor) ->
       case isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+          ResultMeasurement = lists:filter(fun(Measurement) ->
+            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
           case ResultMeasurement of
             [] ->
               erlang:error("No measurement found");
@@ -199,3 +209,43 @@ isGoodType(pm25) -> true;
 isGoodType(temp) -> true;
 isGoodType(_) -> false.
 
+getOneValue(Type, Station, Date, Monitor) ->
+  Stations = Monitor#monitor.stations,
+  ResultStation = lists:filter(fun(Station1) -> (Station1#station.name == Station#station.name) end, Stations),
+  if ResultStation == [] -> erlang:error("No station found");
+    true ->
+      H = hd(ResultStation),
+      Measurements = H#station.measurements,
+      ResultMeasurement = lists:filter(fun(Measurement) ->
+        (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+      if ResultMeasurement == [] -> erlang:error("No measurement found");
+        true -> hd(ResultMeasurement)
+      end
+  end.
+
+getStationMean(Type, Station, Monitor) ->
+  Stations = Monitor#monitor.stations,
+  ResultStation = lists:filter(fun(Station1) -> (Station1#station.name == Station#station.name) end, Stations),
+  if ResultStation == [] -> erlang:error("No station found");
+    true ->
+      H = hd(ResultStation),
+      Measurements = H#station.measurements,
+      ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.type == Type) end, Measurements),
+      if ResultMeasurement == [] -> erlang:error("No measurement found");
+        true ->
+          mean(lists:map(fun(XD) -> XD#measurement.value end, ResultMeasurement))
+      end
+  end.
+
+getDailyMean(Type, Date, Monitor) ->
+  Stations = Monitor#monitor.stations,
+  Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
+  FilteredMeasurements = lists:filter(fun(X) -> (X#measurement.date == Date) and (X#measurement.type == Type) end, Measurements),
+  mean(lists:map(fun(XD) -> XD#measurement.value end, FilteredMeasurements))
+.
+
+mean([]) -> erlang:error("Wrong man");
+mean(Values) -> lists:sum(Values) / length(Values).
+
+getDailyAverageDataCount(Date, Type, Monitor) ->
+  erlang:error(not_implemented).
