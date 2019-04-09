@@ -31,65 +31,85 @@ test() ->
   P2 = addStation("Stacja2", {2, 3}, P1),
   P3 = addStation("Stacja3", {3, 4}, P2),
   P4 = addStation("Stacja4", {4, 5}, P3),
-  P5 = addValue({4, 5}, calendar:local_time(), "Typ", "Wartosc", P4),
-  P6 = addValue({4, 5}, calendar:local_time(), "Typ1", "Wartosc", P5),
-  P7 = addValue({4, 5}, calendar:local_time(), "Typ2", "Wartosc", P6),
-  P8 = addValue({4, 5}, calendar:local_time(), "Typ3", "Wartosc", P7),
-  P9 = addValue("Stacja4", calendar:local_time(), "Typ4", "Wartosc", P8),
+  P5 = addValue({4, 5}, calendar:local_time(), pm10, "Wartosc", P4),
+  P6 = addValue({4, 5}, calendar:local_time(), pm25, "Wartosc", P5),
+  P7 = addValue({4, 5}, calendar:local_time(), temp, "Wartosc", P6),
+  P8 = addValue({4, 5}, calendar:local_time(), temp, "Wartosc", P7),
+  P9 = addValue("Stacja4", calendar:local_time(), pm10, "Wartosc", P8),
   LastStation = lists:last(P9#monitor.stations),
-  lists:flatlength(LastStation#station.measurements)
+  lists:flatlength(LastStation#station.measurements),
+  P9
 .
 
 createMonitor() ->
   #monitor{}.
 
 addStation(Name, {X, Y}, Monitor) ->
-  Station = #station{name = Name, coords = {X, Y}},
-  ActualizedStation = Monitor#monitor.stations ++ [Station],
-  Monitor#monitor{
-    stations = ActualizedStation
-  }.
-
-addValue({X, Y}, Date, Type, Value, Monitor) ->
-  [Stations] = [Monitor#monitor.stations],
-  Result = lists:filter(fun(Station) -> (Station#station.coords == {X, Y}) end, Stations),
+  Stations = Monitor#monitor.stations,
+  Result = lists:filter(fun(Station) ->
+    (Station#station.coords == {X, Y}) or (Station#station.name == Name) end, Stations),
   case Result of
     [] ->
-      erlang:error("Coudln't find that station with provided X and Y");
-    [Current] ->
-      Measurement = #measurement{station = Current, date = Date, type = Type, value = Value},
-      ActualizedMeasurements = Current#station.measurements ++ [Measurement],
-
-      NewCurrent = Current#station{
-        measurements = ActualizedMeasurements
-      },
-      ActualizedStation = lists:delete(Current,Monitor#monitor.stations) ++ [NewCurrent],
+      Station = #station{name = Name, coords = {X, Y}},
+      ActualizedStation = Monitor#monitor.stations ++ [Station],
       Monitor#monitor{
         stations = ActualizedStation
       };
-    _ ->
-      erlang:error("If this goes here I am out")
-  end;
-
-addValue(Name, Date, Type, Value, Monitor) ->
-  [Stations] = [Monitor#monitor.stations],
-  Result = lists:filter(fun(Station) -> (Station#station.name == Name) end, Stations),
-  case Result of
-    [] ->
-      erlang:error("Coudln't find that station with provided X and Y");
-    [Current] ->
-      Measurement = #measurement{station = Current, date = Date, type = Type, value = Value},
-      ActualizedMeasurements = Current#station.measurements ++ [Measurement],
-
-      NewCurrent = Current#station{
-        measurements = ActualizedMeasurements
-      },
-      ActualizedStation = lists:delete(Current,Monitor#monitor.stations) ++ [NewCurrent],
-      Monitor#monitor{
-        stations = ActualizedStation
-      };
-    _ ->
-      erlang:error("If this goes here I am out")
+    [_] ->
+      erlang:error("That station exists")
   end
 .
 
+addValue({X, Y}, Date, Type, Value, Monitor) ->
+  Stations = Monitor#monitor.stations,
+  ResultStation = lists:filter(fun(Station) -> (Station#station.coords == {X, Y}) end, Stations),
+  case ResultStation of
+    [] ->
+      erlang:error("Coudln't find that station with provided X and Y");
+    [CurrentStation] ->
+      case isGoodType(Type) of
+        true ->
+          Measurement = #measurement{station = CurrentStation, date = Date, type = Type, value = Value},
+          ActualizedMeasurements = CurrentStation#station.measurements ++ [Measurement],
+
+          NewCurrentStation = CurrentStation#station{
+            measurements = ActualizedMeasurements
+          },
+          ActualizedStation = lists:delete(CurrentStation, Monitor#monitor.stations) ++ [NewCurrentStation],
+          Monitor#monitor{
+            stations = ActualizedStation
+          };
+        false ->
+          erlang:error("Wrong type")
+      end
+  end;
+
+addValue(Name, Date, Type, Value, Monitor) ->
+  Stations = Monitor#monitor.stations,
+  ResultStation = lists:filter(fun(Station) -> (Station#station.name == Name) end, Stations),
+  case ResultStation of
+    [] ->
+      erlang:error("Coudln't find that station with provided X and Y");
+    [CurrentStation] ->
+      case isGoodType(Type) of
+        true ->
+          Measurement = #measurement{station = CurrentStation, date = Date, type = Type, value = Value},
+          ActualizedMeasurements = CurrentStation#station.measurements ++ [Measurement],
+
+          NewCurrentStation = CurrentStation#station{
+            measurements = ActualizedMeasurements
+          },
+          ActualizedStation = lists:delete(CurrentStation, Monitor#monitor.stations) ++ [NewCurrentStation],
+          Monitor#monitor{
+            stations = ActualizedStation
+          };
+        false ->
+          erlang:error("Wrong type")
+      end
+  end
+.
+
+isGoodType(pm10) -> true;
+isGoodType(pm25) -> true;
+isGoodType(temp) -> true;
+isGoodType(_) -> false.
