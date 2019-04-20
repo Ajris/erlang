@@ -9,7 +9,7 @@
 -module(pollution_server).
 -author("ajris").
 
--include("pollution.hrl").
+-include("pollution_header.hrl").
 
 %% API
 -export([start/0]).

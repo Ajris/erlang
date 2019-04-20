@@ -8,7 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(pollution).
 -author("ajris").
--include("pollution.hrl").
+-include("pollution_header.hrl").
 
 %% API
 -export([createMonitor/0]).

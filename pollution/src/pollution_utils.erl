@@ -9,7 +9,7 @@
 -module(pollution_utils).
 -author("ajris").
 
--include("pollution.hrl").
+-include("pollution_header.hrl").
 
 %% API
 -export([calculateMean/1]).
@@ -52,5 +52,3 @@ getMeasurementsByType(Type, Station) ->
   Measurements = Station#station.measurements,
   Result = lists:filter(fun(Measurement) -> (Measurement#measurement.type == Type) end, Measurements),
   Result.
-
-getMeasurements()

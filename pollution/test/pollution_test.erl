@@ -9,19 +9,9 @@
 -module(pollution_test).
 -author("ajris").
 
--include("../src/pollution.hrl").
+-include("../src/pollution_header.hrl").
+-include("pollution_test_header.hrl").
 -include_lib("eunit/include/eunit.hrl").
-
--define(FirstStationName, "name1").
--define(SecondStationName, "name2").
--define(FirstCoords, {0.0, 0.0}).
--define(SecondCoords, {1.0, 1.0}).
--define(FirstDateTime, {{1998, 09, 17}, {22, 40, 00}}).
--define(SecondDateTime, {{1998, 09, 17}, {22, 00, 00}}).
--define(FirstType, pm10).
--define(SecondType, pm25).
--define(FirstValue, 5).
--define(SecondValue, 10).
 
 create_monitor_test() ->
   ?assertEqual(#monitor{}, pollution:createMonitor()).
