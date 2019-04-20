@@ -36,65 +36,79 @@ init() ->
   loopServer(Monitor).
 
 addStation(Name, Position) ->
-  server ! {addStation, Name, Position, self()}.
+  server ! {addStation, Name, Position, self()},
+  returnValue().
 
 addValue(NameOrPosition, Date, Type, Value) ->
-  server ! {addValue, NameOrPosition, Date, Type, Value, self()}.
+  server ! {addValue, NameOrPosition, Date, Type, Value, self()},
+  returnValue().
 
 removeValue(NameOrPosition, Date, Type) ->
-  server ! {removeValue, NameOrPosition, Date, Type, self()}.
+  server ! {removeValue, NameOrPosition, Date, Type, self()},
+  returnValue().
 
 getOneValue(NameOrPosition, Date, Type) ->
-  server ! {getOneValue, NameOrPosition, Date, Type, self()}.
+  server ! {getOneValue, NameOrPosition, Date, Type, self()},
+  returnValue().
 
 getStationMean(NameOrPosition, Type) ->
-  server ! {getStationMean, NameOrPosition, Type, self()}.
+  server ! {getStationMean, NameOrPosition, Type, self()},
+  returnValue().
 
 getDailyMean(Type, Date) ->
-  server ! {getDailyMean, Type, Date, self()}.
+  server ! {getDailyMean, Type, Date, self()},
+  returnValue().
 
 getDailyAverageDataCount(Date) ->
-  server ! {getDailyAverageDataCount, Date, self()}.
+  server ! {getDailyAverageDataCount, Date, self()},
+  returnValue().
 
 loopServer(Monitor) ->
   receive
     {addStation, Name, Position, PID} -> NewMonitor = pollution:addStation(Name, Position, Monitor),
-      handleResult(NewMonitor, Monitor);
+      handleResult(NewMonitor, Monitor, PID);
 
     {addValue, NameOrPosition, Date, Type, Value, PID} ->
       NewMonitor = pollution:addValue(NameOrPosition, Date, Type, Value, Monitor),
-      handleResult(NewMonitor, Monitor);
+      handleResult(NewMonitor, Monitor, PID);
 
     {removeValue, NameOrPosition, Date, Type, PID} ->
       NewMonitor = pollution:removeValue(NameOrPosition, Date, Type, Monitor),
-      handleResult(NewMonitor, Monitor);
+      handleResult(NewMonitor, Monitor, PID);
 
     {getOneValue, NameOrPosition, Date, Type, PID} ->
       Value = pollution:getOneValue(NameOrPosition, Date, Type, Monitor),
-      handleResult(Value, Monitor);
+      handleResult(Value, Monitor, PID);
 
     {getStationMean, NameOrPosition, Type, PID} -> Value = pollution:getStationMean(NameOrPosition, Type, Monitor),
-      handleResult(Value, Monitor);
+      handleResult(Value, Monitor, PID);
 
     {getDailyMean, Type, Date, PID} -> Value = pollution:getDailyMean(Type, Date, Monitor),
-      handleResult(Value, Monitor);
+      handleResult(Value, Monitor, PID);
 
     {getDailyAverageDataCount, Date, PID} -> Value = pollution:getDailyAverageDataCount(Date, Monitor),
-      handleResult(Value, Monitor);
+      handleResult(Value, Monitor, PID);
 
     {stop, PID} -> PID ! ok;
 
     _ -> loopServer(Monitor)
   end.
 
-handleResult(Result, Monitor) ->
+handleResult(Result, Monitor, PID) ->
   case lists:member(Result, ?SPECIFIED_EXCEPTIONS) of
     true -> io:format("Error occured: ~w", [Result]),
+      PID ! Result,
       loopServer(Monitor);
     _ ->
       case Result of
         {_, _} -> io:format("Got new monitor");
         _ -> io:format("Got value ~w", [Result])
       end,
+      PID ! Result,
       loopServer(Result)
+  end.
+
+returnValue() ->
+  receive
+    V -> V
   end.

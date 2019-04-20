@@ -20,7 +20,7 @@ calculate_mean_empty_list_test() ->
   ?assertEqual(?EMPTY_ERROR, pollution_utils:calculateMean([])).
 
 calculate_mean_list_test() ->
-  ?assertEqual(?EMPTY_ERROR, pollution_utils:calculateMean(?LIST)).
+  ?assertEqual(2.0, pollution_utils:calculateMean(?LIST)).
 
 is_measurement_type_test() ->
   ?assertEqual(true, pollution_utils:isMeasurementType(?PM10)),
