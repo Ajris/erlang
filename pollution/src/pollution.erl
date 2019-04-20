@@ -224,7 +224,8 @@ getOneValue(Type, Station, Date, Monitor) ->
 
 getStationMean(Type, Station, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station1) -> (Station1#station.stationName == Station#station.stationName) end, Stations),
+  ResultStation = lists:filter(fun(Station1) ->
+    ((Station1#station.stationName == Station#station.stationName) and (Station1#station.stationCoordinates == Station#station.stationCoordinates)) end, Stations),
   if ResultStation == [] -> erlang:error("No station found");
     true ->
       H = hd(ResultStation),

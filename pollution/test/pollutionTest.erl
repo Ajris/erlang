@@ -22,6 +22,7 @@
 -define(FirstType, pm10).
 -define(SecondType, pm25).
 -define(FirstValue, 5).
+-define(SecondValue, 10).
 
 create_monitor_test() ->
   ?assertEqual(#monitor{}, pollution:createMonitor()).
@@ -148,3 +149,25 @@ get_one_not_existing_value_test() ->
   ?assertError("No station found", pollution:getOneValue(?FirstType, WrongCoordsStation, ?FirstDateTime, Monitor2)),
   ?assertError("No measurement found", pollution:getOneValue(?FirstType, CurrentStation, ?SecondDateTime, Monitor2)),
   ?assertError("No measurement found", pollution:getOneValue(?SecondType, CurrentStation, ?FirstDateTime, Monitor2)).
+
+get_mean_existing_station_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+  Monitor3 = pollution:addValue(?FirstCoords, ?SecondDateTime, ?FirstType, ?SecondValue, Monitor2),
+  Station = #station{stationName = ?FirstStationName, stationCoordinates = ?FirstCoords},
+
+  ?assertEqual(7.5,pollution:getStationMean(?FirstType, Station, Monitor3)).
+
+get_mean_not_existing_station_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+
+  CurrentStation = #station{stationName = ?FirstStationName, stationCoordinates = ?FirstCoords},
+  WrongNameStation = #station{stationName = ?SecondStationName, stationCoordinates = ?FirstCoords},
+  WrongCoordsStation = #station{stationName = ?FirstStationName, stationCoordinates = ?SecondCoords},
+
+  ?assertError("No station found", pollution:getStationMean(?FirstType, WrongNameStation, Monitor2)),
+  ?assertError("No station found", pollution:getStationMean(?FirstType, WrongCoordsStation, Monitor2)),
+  ?assertError("No measurement found", pollution:getStationMean(?SecondType, CurrentStation, Monitor2)).
