@@ -24,27 +24,25 @@ createMonitor() ->
   #monitor{}.
 
 addStation(Name, {X, Y}, Monitor) ->
-  Result = pollution_utils:getStationByKeys(Name, {X, Y}, Monitor),
-  case Result of
+  Stations = pollution_utils:getStationsByNameAndPosition(Name, {X, Y}, Monitor),
+  case Stations of
     [] ->
       Station = #station{stationName = Name, stationCoordinates = {X, Y}},
-      ActualizedStation = Monitor#monitor.stations ++ [Station],
+      ActualizedStations = Monitor#monitor.stations ++ [Station],
       Monitor#monitor{
-        stations = ActualizedStation
+        stations = ActualizedStations
       };
     [_] -> ?STATION_ALREADY_EXIST_ERROR
   end.
 
 addValue(Key, Date, Type, Value, Monitor) ->
-  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
-  case ResultStation of
+  Stations = pollution_utils:getStationsByKey(Key, Monitor),
+  case Stations of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
       case pollution_utils:isMeasurementType(Type) of
         true ->
-          Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) ->
-            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+          ResultMeasurement = pollution_utils:getMeasurementsByDateAndType(Date, Type, CurrentStation),
           case ResultMeasurement of
             [] ->
               Measurement = #measurement{date = Date, type = Type, value = Value},
@@ -56,60 +54,24 @@ addValue(Key, Date, Type, Value, Monitor) ->
               Monitor#monitor{
                 stations = ActualizedStation
               };
-
-            [CurrentMeasurement | Tail] -> ?UNKNOWN_ERROR;
-            [_] -> ?UNKNOWN_ERROR
+            [_] -> ?SAME_MEASUREMENT_EXIST_ERROR
           end;
-
-
         false -> ?WRONG_TYPE_SPECIFIED_ERROR
       end
   end.
 
-removeValue({X, Y}, Date, Type, Monitor) ->
-  Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.stationCoordinates == {X, Y}) end, Stations),
-  case ResultStation of
-    [] -> ?STATION_NOT_FOUND_ERROR;
-    [CurrentStation] ->
-      case pollution_utils:isMeasurementType(Type) of
-        true ->
-          Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) ->
-            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
-          case ResultMeasurement of
-            [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
-            [CurrentMeasurement | Tail] ->
-              ActualizedMeasurements = lists:delete(CurrentMeasurement, CurrentStation#station.measurements),
-
-              NewCurrentStation = CurrentStation#station{
-                measurements = ActualizedMeasurements
-              },
-              ActualizedStation = lists:delete(CurrentStation, Monitor#monitor.stations) ++ [NewCurrentStation],
-
-              Monitor#monitor{
-                stations = ActualizedStation
-              };
-            [_] -> ?UNKNOWN_ERROR
-          end;
-        false -> ?WRONG_TYPE_SPECIFIED_ERROR
-      end
-  end;
-
 removeValue(Key, Date, Type, Monitor) ->
-  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
-  case ResultStation of
+  Stations = pollution_utils:getStationsByKey(Key, Monitor),
+  case Stations of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
       case pollution_utils:isMeasurementType(Type) of
         true ->
-          Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) ->
-            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+          ResultMeasurement = pollution_utils:getMeasurementsByDateAndType(Date, Type, CurrentStation),
           case ResultMeasurement of
             [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
 
-            [CurrentMeasurement | Tail] ->
+            [CurrentMeasurement] ->
               ActualizedMeasurements = lists:delete(CurrentMeasurement, CurrentStation#station.measurements),
 
               NewCurrentStation = CurrentStation#station{
@@ -119,36 +81,33 @@ removeValue(Key, Date, Type, Monitor) ->
 
               Monitor#monitor{
                 stations = ActualizedStation
-              };
-            [_] -> ?UNKNOWN_ERROR
+              }
           end;
         false -> ?WRONG_TYPE_SPECIFIED_ERROR
       end
   end.
 
 getOneValue(Type, Key, Date, Monitor) ->
-  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
-  if ResultStation == [] -> ?STATION_NOT_FOUND_ERROR;
-    true ->
-      H = hd(ResultStation),
-      Measurements = H#station.measurements,
-      ResultMeasurement = lists:filter(fun(Measurement) ->
-        ((Measurement#measurement.date == Date) and (Measurement#measurement.type == Type)) end, Measurements),
-      if ResultMeasurement == [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
-        true -> hd(ResultMeasurement)
+  Stations = pollution_utils:getStationsByKey(Key, Monitor),
+  case Stations of
+    [] -> ?STATION_NOT_FOUND_ERROR;
+    [Station] ->
+      ResultMeasurement = pollution_utils:getMeasurementsByDateAndType(Date, Type, Station),
+      case ResultMeasurement of
+        [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
+        [V] -> V
       end
   end.
 
 getStationMean(Type, Key, Monitor) ->
-  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
-  if ResultStation == [] -> ?STATION_NOT_FOUND_ERROR;
-    true ->
-      H = hd(ResultStation),
-      Measurements = H#station.measurements,
-      ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.type == Type) end, Measurements),
-      if ResultMeasurement == [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
-        true ->
-          pollution_utils:calculateMean(lists:map(fun(XD) -> XD#measurement.value end, ResultMeasurement))
+  Stations = pollution_utils:getStationsByKey(Key, Monitor),
+  case Stations of
+    [] -> ?STATION_NOT_FOUND_ERROR;
+    [Station] ->
+      Measurements = pollution_utils:getMeasurementsByType(Type, Station),
+      case Measurements of
+        [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
+        _ -> pollution_utils:calculateMean(lists:map(fun(Measurement) -> Measurement#measurement.value end, Measurements))
       end
   end.
 
