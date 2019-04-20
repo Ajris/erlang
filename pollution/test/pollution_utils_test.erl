@@ -31,37 +31,35 @@ is_day_equal_test() ->
   ?assertEqual(true, pollution_utils:isDayEqual(?FirstDateTime, ?SecondDateTime)),
   ?assertEqual(false, pollution_utils:isDayEqual(?FirstDateTime, {{1998, 10, 17}, {}})).
 
-get_station_by_key_test() ->
+get_stations_by_key_test() ->
   Monitor = pollution:createMonitor(),
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
 
-  ?assertEqual(1, pollution_utils:getStationsByKey(?FirstStationName, Monitor1)),
-  ?assertEqual(1, pollution_utils:getStationsByKey(?FirstCoords, Monitor1)),
-  ?assertEqual(0, pollution_utils:getStationsByKey(?SecondCoords, Monitor1)),
-  ?assertEqual(0, pollution_utils:getStationsByKey(?SecondStationName, Monitor1)).
+  ?assertEqual(1, length(pollution_utils:getStationsByKey(?FirstStationName, Monitor1))),
+  ?assertEqual(1, length(pollution_utils:getStationsByKey(?FirstCoords, Monitor1))),
+  ?assertEqual(0, length(pollution_utils:getStationsByKey(?SecondCoords, Monitor1))),
+  ?assertEqual(0, length(pollution_utils:getStationsByKey(?SecondStationName, Monitor1))).
 
-%%getStationsByKey(Key, Monitor) ->
-%%  case Key of
-%%    {X, Y} ->
-%%      Result = lists:filter(fun(Station) ->
-%%        (Station#station.stationCoordinates == {X, Y}) end, Monitor#monitor.stations);
-%%    Name ->
-%%      Result = lists:filter(fun(Station) -> (Station#station.stationName == Name) end, Monitor#monitor.stations)
-%%  end,
-%%  Result.
-%%
-%%getStationsByNameAndPosition(Name, {X, Y}, Monitor) ->
-%%  Result = lists:filter(fun(Station) ->
-%%    (Station#station.stationCoordinates == {X, Y}) or (Station#station.stationName == Name) end, Monitor#monitor.stations),
-%%  Result.
-%%
-%%getMeasurementsByDateAndType(Date, Type, Station) ->
-%%  Measurements = Station#station.measurements,
-%%  Result = lists:filter(fun(Measurement) ->
-%%    (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
-%%  Result.
-%%
-%%getMeasurementsByType(Type, Station) ->
-%%  Measurements = Station#station.measurements,
-%%  Result = lists:filter(fun(Measurement) -> (Measurement#measurement.type == Type) end, Measurements),
-%%  Result.
+get_stations_by_name_and_position_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+
+  ?assertEqual(1, length(pollution_utils:getStationsByNameAndPosition(?SecondStationName, ?FirstCoords, Monitor1))),
+  ?assertEqual(1, length(pollution_utils:getStationsByNameAndPosition(?FirstStationName, ?SecondCoords, Monitor1))),
+  ?assertEqual(0, length(pollution_utils:getStationsByNameAndPosition(?SecondStationName, ?SecondCoords, Monitor1))).
+
+get_measurements_by_date_and_type_test() ->
+  M1 = #measurement{date = ?FirstDateTime, type = ?FirstType},
+  M2 = #measurement{date = ?SecondDateTime, type = ?FirstType},
+  Station = #station{measurements = [M1, M2]},
+
+  ?assertEqual(1, length(pollution_utils:getMeasurementsByDateAndType(?FirstDateTime, ?FirstType, Station))),
+  ?assertEqual(0, length(pollution_utils:getMeasurementsByDateAndType(?SecondDateTime, ?SecondType, Station))).
+
+get_measurements_by_type_test() ->
+  M1 = #measurement{type = ?FirstType},
+  M2 = #measurement{type = ?FirstType},
+  Station = #station{measurements = [M1, M2]},
+
+  ?assertEqual(2, length(pollution_utils:getMeasurementsByType(?FirstType, Station))),
+  ?assertEqual(0, length(pollution_utils:getMeasurementsByType(?SecondType, Station))).
