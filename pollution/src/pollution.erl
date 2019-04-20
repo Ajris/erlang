@@ -21,7 +21,6 @@
 -export([getDailyMean/3]).
 -export([getDailyAverageDataCount/2]).
 
-
 test() ->
   Station = #station{stationName = "Stacja4", stationCoordinates = {4, 5}},
   P = createMonitor(),
