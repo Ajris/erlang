@@ -39,20 +39,20 @@ addStation(Name, Position) ->
   server ! {addStation, Name, Position, self()},
   returnValue().
 
-addValue(NameOrPosition, Date, Type, Value) ->
-  server ! {addValue, NameOrPosition, Date, Type, Value, self()},
+addValue(Key, Date, Type, Value) ->
+  server ! {addValue, Key, Date, Type, Value, self()},
   returnValue().
 
-removeValue(NameOrPosition, Date, Type) ->
-  server ! {removeValue, NameOrPosition, Date, Type, self()},
+removeValue(Key, Date, Type) ->
+  server ! {removeValue, Key, Date, Type, self()},
   returnValue().
 
-getOneValue(NameOrPosition, Date, Type) ->
-  server ! {getOneValue, NameOrPosition, Date, Type, self()},
+getOneValue(Key, Date, Type) ->
+  server ! {getOneValue, Key, Date, Type, self()},
   returnValue().
 
-getStationMean(NameOrPosition, Type) ->
-  server ! {getStationMean, NameOrPosition, Type, self()},
+getStationMean(Key, Type) ->
+  server ! {getStationMean, Key, Type, self()},
   returnValue().
 
 getDailyMean(Type, Date) ->
@@ -68,19 +68,19 @@ loopServer(Monitor) ->
     {addStation, Name, Position, PID} -> NewMonitor = pollution:addStation(Name, Position, Monitor),
       handleResult(NewMonitor, Monitor, PID);
 
-    {addValue, NameOrPosition, Date, Type, Value, PID} ->
-      NewMonitor = pollution:addValue(NameOrPosition, Date, Type, Value, Monitor),
+    {addValue, Key, Date, Type, Value, PID} ->
+      NewMonitor = pollution:addValue(Key, Date, Type, Value, Monitor),
       handleResult(NewMonitor, Monitor, PID);
 
-    {removeValue, NameOrPosition, Date, Type, PID} ->
-      NewMonitor = pollution:removeValue(NameOrPosition, Date, Type, Monitor),
+    {removeValue, Key, Date, Type, PID} ->
+      NewMonitor = pollution:removeValue(Key, Date, Type, Monitor),
       handleResult(NewMonitor, Monitor, PID);
 
-    {getOneValue, NameOrPosition, Date, Type, PID} ->
-      Value = pollution:getOneValue(NameOrPosition, Date, Type, Monitor),
+    {getOneValue, Key, Date, Type, PID} ->
+      Value = pollution:getOneValue(Key, Date, Type, Monitor),
       handleResult(Value, Monitor, PID);
 
-    {getStationMean, NameOrPosition, Type, PID} -> Value = pollution:getStationMean(NameOrPosition, Type, Monitor),
+    {getStationMean, Key, Type, PID} -> Value = pollution:getStationMean(Key, Type, Monitor),
       handleResult(Value, Monitor, PID);
 
     {getDailyMean, Type, Date, PID} -> Value = pollution:getDailyMean(Type, Date, Monitor),

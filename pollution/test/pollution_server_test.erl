@@ -23,15 +23,9 @@
 -define(FirstValue, 5).
 -define(SecondValue, 10).
 
-integration_test() ->
+integration_tesst() ->
   pollution_server:start(),
   pollution_server:addStation(?FirstStationName, ?FirstCoords),
   pollution_server:addValue(?FirstStationName, ?FirstDateTime, ?FirstType, ?FirstValue),
-  pollution_server:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue),
-  pollution_server:removeValue(?FirstStationName, ?FirstDateTime, ?FirstType),
-  pollution_server:removeValue(?FirstCoords, ?FirstDateTime, ?FirstType),
-  pollution_server:getOneValue(?FirstStationName, ?FirstDateTime, ?FirstType),
-  pollution_server:getStationMean(?FirstStationName, ?FirstDateTime, ?FirstType),
-  pollution_server:getDailyMean(?FirstStationName, ?FirstDateTime, ?FirstType),
-  pollution_server:getDailyAverageDataCount(?FirstStationName, ?FirstDateTime, ?FirstType),
+  ?assertEqual(5.0, pollution_server:getStationMean(?FirstStationName, ?FirstType)),
   pollution_server:stop().

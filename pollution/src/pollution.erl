@@ -24,9 +24,7 @@ createMonitor() ->
   #monitor{}.
 
 addStation(Name, {X, Y}, Monitor) ->
-  Stations = Monitor#monitor.stations,
-  Result = lists:filter(fun(Station) ->
-    (Station#station.stationCoordinates == {X, Y}) or (Station#station.stationName == Name) end, Stations),
+  Result = pollution_utils:getStationByKeys(Name, {X, Y}, Monitor),
   case Result of
     [] ->
       Station = #station{stationName = Name, stationCoordinates = {X, Y}},
@@ -37,41 +35,8 @@ addStation(Name, {X, Y}, Monitor) ->
     [_] -> ?STATION_ALREADY_EXIST_ERROR
   end.
 
-addValue({X, Y}, Date, Type, Value, Monitor) ->
-  Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.stationCoordinates == {X, Y}) end, Stations),
-  case ResultStation of
-    [] -> ?STATION_NOT_FOUND_ERROR;
-    [CurrentStation] ->
-      case pollution_utils:isMeasurementType(Type) of
-        true ->
-          Measurements = CurrentStation#station.measurements,
-          ResultMeasurement = lists:filter(fun(Measurement) ->
-            (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
-          case ResultMeasurement of
-            [] ->
-              Measurement = #measurement{date = Date, type = Type, value = Value},
-              ActualizedMeasurements = CurrentStation#station.measurements ++ [Measurement],
-              NewCurrentStation = CurrentStation#station{
-                measurements = ActualizedMeasurements
-              },
-              ActualizedStation = lists:delete(CurrentStation, Monitor#monitor.stations) ++ [NewCurrentStation],
-              Monitor#monitor{
-                stations = ActualizedStation
-              };
-
-            [CurrentMeasurement | Tail] -> ?UNKNOWN_ERROR;
-            [_] -> ?UNKNOWN_ERROR
-          end;
-
-
-        false -> ?WRONG_TYPE_SPECIFIED_ERROR
-      end
-  end;
-
-addValue(Name, Date, Type, Value, Monitor) ->
-  Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.stationName == Name) end, Stations),
+addValue(Key, Date, Type, Value, Monitor) ->
+  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
@@ -131,9 +96,8 @@ removeValue({X, Y}, Date, Type, Monitor) ->
       end
   end;
 
-removeValue(Name, Date, Type, Monitor) ->
-  Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.stationName == Name) end, Stations),
+removeValue(Key, Date, Type, Monitor) ->
+  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
@@ -162,10 +126,8 @@ removeValue(Name, Date, Type, Monitor) ->
       end
   end.
 
-getOneValue(Type, Station, Date, Monitor) ->
-  Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station1) ->
-    ((Station1#station.stationName == Station#station.stationName) and (Station1#station.stationCoordinates == Station#station.stationCoordinates)) end, Stations),
+getOneValue(Type, Key, Date, Monitor) ->
+  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
   if ResultStation == [] -> ?STATION_NOT_FOUND_ERROR;
     true ->
       H = hd(ResultStation),
@@ -177,10 +139,8 @@ getOneValue(Type, Station, Date, Monitor) ->
       end
   end.
 
-getStationMean(Type, Station, Monitor) ->
-  Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station1) ->
-    ((Station1#station.stationName == Station#station.stationName) and (Station1#station.stationCoordinates == Station#station.stationCoordinates)) end, Stations),
+getStationMean(Type, Key, Monitor) ->
+  ResultStation = pollution_utils:getStationByKey(Key, Monitor),
   if ResultStation == [] -> ?STATION_NOT_FOUND_ERROR;
     true ->
       H = hd(ResultStation),
@@ -195,11 +155,13 @@ getStationMean(Type, Station, Monitor) ->
 getDailyMean(Type, Date, Monitor) ->
   Stations = Monitor#monitor.stations,
   Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
-  FilteredMeasurements = lists:filter(fun(X) -> (pollution_utils:isDayEqual(X#measurement.date, Date)) and (X#measurement.type == Type) end, Measurements),
+  FilteredMeasurements = lists:filter(fun(X) ->
+    (pollution_utils:isDayEqual(X#measurement.date, Date)) and (X#measurement.type == Type) end, Measurements),
   pollution_utils:calculateMean(lists:map(fun(XD) -> XD#measurement.value end, FilteredMeasurements)).
 
 getDailyAverageDataCount(Date, Monitor) ->
   Stations = Monitor#monitor.stations,
   Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
-  FilteredMeasurements = lists:filter(fun(X) -> (pollution_utils:isDayEqual(X#measurement.date, Date)) end, Measurements),
-  lists:flatlength(FilteredMeasurements)/lists:flatlength(Stations).
+  FilteredMeasurements = lists:filter(fun(X) ->
+    (pollution_utils:isDayEqual(X#measurement.date, Date)) end, Measurements),
+  lists:flatlength(FilteredMeasurements) / lists:flatlength(Stations).
