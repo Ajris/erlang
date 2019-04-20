@@ -240,16 +240,18 @@ getStationMean(Type, Station, Monitor) ->
 getDailyMean(Type, Date, Monitor) ->
   Stations = Monitor#monitor.stations,
   Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
-  FilteredMeasurements = lists:filter(fun(X) -> (X#measurement.date == Date) and (X#measurement.type == Type) end, Measurements),
-  mean(lists:map(fun(XD) -> XD#measurement.value end, FilteredMeasurements))
-.
+  FilteredMeasurements = lists:filter(fun(X) -> (isDateEqual(X#measurement.date, Date)) and (X#measurement.type == Type) end, Measurements),
+  mean(lists:map(fun(XD) -> XD#measurement.value end, FilteredMeasurements)).
 
-mean([]) -> erlang:error("Wrong man");
+isDateEqual({FirstDate, _}, {SecondDate, _}) ->
+  FirstDate == SecondDate.
+
+
+mean([]) -> erlang:error("Cant calculate mean from empty values");
 mean(Values) -> lists:sum(Values) / length(Values).
 
 getDailyAverageDataCount(Date, Monitor) ->
   Stations = Monitor#monitor.stations,
   Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
-  FilteredMeasurements = lists:filter(fun(X) -> (X#measurement.date == Date) end, Measurements),
-  lists:flatlength(FilteredMeasurements)/lists:flatlength(Stations)
-.
+  FilteredMeasurements = lists:filter(fun(X) -> (isDateEqual(X#measurement.date, Date)) end, Measurements),
+  lists:flatlength(FilteredMeasurements)/lists:flatlength(Stations).

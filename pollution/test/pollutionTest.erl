@@ -18,7 +18,7 @@
 -define(FirstCoords, {0.0, 0.0}).
 -define(SecondCoords, {1.0, 1.0}).
 -define(FirstDateTime, {{1998, 09, 17}, {22, 40, 00}}).
--define(SecondDateTime, {{2019, 09, 17}, {22, 40, 00}}).
+-define(SecondDateTime, {{1998, 09, 17}, {22, 00, 00}}).
 -define(FirstType, pm10).
 -define(SecondType, pm25).
 -define(FirstValue, 5).
@@ -150,7 +150,7 @@ get_one_not_existing_value_test() ->
   ?assertError("No measurement found", pollution:getOneValue(?FirstType, CurrentStation, ?SecondDateTime, Monitor2)),
   ?assertError("No measurement found", pollution:getOneValue(?SecondType, CurrentStation, ?FirstDateTime, Monitor2)).
 
-get_mean_existing_station_test() ->
+get_station_mean_existing_station_test() ->
   Monitor = pollution:createMonitor(),
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
   Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
@@ -159,7 +159,7 @@ get_mean_existing_station_test() ->
 
   ?assertEqual(7.5,pollution:getStationMean(?FirstType, Station, Monitor3)).
 
-get_mean_not_existing_station_test() ->
+get_station_mean_not_existing_station_test() ->
   Monitor = pollution:createMonitor(),
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
   Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
@@ -171,3 +171,28 @@ get_mean_not_existing_station_test() ->
   ?assertError("No station found", pollution:getStationMean(?FirstType, WrongNameStation, Monitor2)),
   ?assertError("No station found", pollution:getStationMean(?FirstType, WrongCoordsStation, Monitor2)),
   ?assertError("No measurement found", pollution:getStationMean(?SecondType, CurrentStation, Monitor2)).
+
+get_daily_mean_existing_station_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addStation(?SecondStationName, ?SecondCoords, Monitor1),
+  Monitor3 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor2),
+  Monitor4 = pollution:addValue(?FirstCoords, ?SecondDateTime, ?FirstType, ?SecondValue, Monitor3),
+
+  ?assertEqual(7.5,pollution:getDailyMean(?FirstType, ?FirstDateTime, Monitor4)).
+
+get_daily_mean_not_existing_station_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+
+  ?assertError("Cant calculate mean from empty values", pollution:getDailyMean(?FirstType, {{2010, 11, 11}, {11, 11, 11}}, Monitor2)),
+  ?assertError("Cant calculate mean from empty values", pollution:getDailyMean(?SecondType, ?FirstDateTime, Monitor2)).
+
+get_daily_average_data_count_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+  Monitor3 = pollution:addValue(?FirstCoords, ?SecondDateTime, ?FirstType, ?SecondValue, Monitor2),
+
+  ?assertEqual(2.0,pollution:getDailyAverageDataCount(?FirstDateTime, Monitor3)).
