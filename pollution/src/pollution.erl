@@ -43,7 +43,7 @@ addValue({X, Y}, Date, Type, Value, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case pollution_utils:isGoodType(Type) of
+      case pollution_utils:isMeasurementType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->
@@ -75,7 +75,7 @@ addValue(Name, Date, Type, Value, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case pollution_utils:isGoodType(Type) of
+      case pollution_utils:isMeasurementType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->
@@ -107,7 +107,7 @@ removeValue({X, Y}, Date, Type, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case pollution_utils:isGoodType(Type) of
+      case pollution_utils:isMeasurementType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->
@@ -137,7 +137,7 @@ removeValue(Name, Date, Type, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case pollution_utils:isGoodType(Type) of
+      case pollution_utils:isMeasurementType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->

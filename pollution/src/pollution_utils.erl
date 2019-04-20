@@ -13,16 +13,12 @@
 
 %% API
 -export([calculateMean/1]).
--export([isGoodType/1]).
+-export([isMeasurementType/1]).
 -export([isDayEqual/2]).
 
 calculateMean([]) -> ?EMPTY_ERROR;
 calculateMean(Values) -> lists:sum(Values) / length(Values).
 
-isGoodType(pm10) -> true;
-isGoodType(pm25) -> true;
-isGoodType(temp) -> true;
-isGoodType(_) -> false.
+isMeasurementType(V) -> lists:member(V, ?MEASUREMENT_TYPES).
 
-isDayEqual({FirstDate, _}, {SecondDate, _}) ->
-  FirstDate == SecondDate.
+isDayEqual({FirstDate, _}, {SecondDate, _}) -> FirstDate == SecondDate.

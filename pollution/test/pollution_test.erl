@@ -12,7 +12,6 @@
 -include("../src/pollution.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
-
 -define(FirstStationName, "name1").
 -define(SecondStationName, "name2").
 -define(FirstCoords, {0.0, 0.0}).
