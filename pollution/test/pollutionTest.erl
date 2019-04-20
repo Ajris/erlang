@@ -19,34 +19,45 @@
 -define(SecondCoords, {1.0, 1.0}).
 -define(FirstDateTime, {{1998, 09, 17}, {22, 40, 00}}).
 -define(SecondDateTime, {{2019, 09, 17}, {22, 40, 00}}).
+-define(FirstType, pm10).
+-define(FirstValue, 5).
 
 create_monitor_test() ->
   ?assertEqual(#monitor{}, pollution:createMonitor()).
 
 add_same_name_station_test() ->
   Monitor = pollution:createMonitor(),
+
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
-  ?assertError("That station exists",pollution:addStation(?FirstStationName, ?SecondCoords, Monitor1)).
+
+  ?assertError("That station exists", pollution:addStation(?FirstStationName, ?SecondCoords, Monitor1)).
 
 add_same_coords_station_test() ->
   Monitor = pollution:createMonitor(),
+
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
-  ?assertError("That station exists",pollution:addStation(?SecondStationName, ?FirstCoords, Monitor1)).
+
+  ?assertError("That station exists", pollution:addStation(?SecondStationName, ?FirstCoords, Monitor1)).
 
 add_new_station_test() ->
   Monitor = pollution:createMonitor(),
+
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
   Monitor2 = pollution:addStation(?SecondStationName, ?SecondCoords, Monitor1),
+
   ?assertEqual(2, length(Monitor2#monitor.stations)).
 
-%%add_new_value_test() ->
-%%  Monitor = pollution:createMonitor(),
-%%  Monitor1 = pollution:addStation("name1", {0.0, 0.0}, Monitor),
-%%  Monitor2 = pollution:addValue({0.0, 0.0}, calendar:local_time(), pm10, 5, Monitor1),
-%%  Stations = Monitor2#monitor.stations,
-%%  Measurement
-%%  FirstStation = hd(Stations),
-%%  ?assertEqual(1, length(FirstStation#station.measurements)),
-%%  ?assertEqual(1, length(FirstStation#station.measurements)),
-%%  ?assertEqual(1, length(FirstStation#station.measurements)),
-%%  ?assertEqual(1, length(FirstStation#station.measurements)).
+add_new_value_test() ->
+  Monitor = pollution:createMonitor(),
+
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+
+  Stations = Monitor2#monitor.stations,
+  FirstStation = hd(Stations),
+  FirstValue = hd(FirstStation#station.measurements),
+
+  ?assertEqual(1, length(FirstStation#station.measurements)),
+  ?assertEqual(?FirstValue, FirstValue#measurement.value),
+  ?assertEqual(?FirstType, FirstValue#measurement.type),
+  ?assertEqual(?FirstDateTime, FirstValue#measurement.date).
