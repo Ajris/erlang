@@ -104,7 +104,7 @@ addValue(Name, Date, Type, Value, Monitor) ->
   ResultStation = lists:filter(fun(Station) -> (Station#station.stationName == Name) end, Stations),
   case ResultStation of
     [] ->
-      erlang:error("Coudln't find that station with provided X and Y");
+      erlang:error("Coudln't find that station with provided Name");
     [CurrentStation] ->
       case isGoodType(Type) of
         true ->

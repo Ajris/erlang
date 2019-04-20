@@ -47,7 +47,7 @@ add_new_station_test() ->
 
   ?assertEqual(2, length(Monitor2#monitor.stations)).
 
-add_new_value_test() ->
+add_new_value_by_coords_test() ->
   Monitor = pollution:createMonitor(),
 
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
@@ -61,3 +61,32 @@ add_new_value_test() ->
   ?assertEqual(?FirstValue, FirstValue#measurement.value),
   ?assertEqual(?FirstType, FirstValue#measurement.type),
   ?assertEqual(?FirstDateTime, FirstValue#measurement.date).
+
+add_new_value_by_name_test() ->
+  Monitor = pollution:createMonitor(),
+
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstStationName, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+
+  Stations = Monitor2#monitor.stations,
+  FirstStation = hd(Stations),
+  FirstValue = hd(FirstStation#station.measurements),
+
+  ?assertEqual(1, length(FirstStation#station.measurements)),
+  ?assertEqual(?FirstValue, FirstValue#measurement.value),
+  ?assertEqual(?FirstType, FirstValue#measurement.type),
+  ?assertEqual(?FirstDateTime, FirstValue#measurement.date).
+
+add_new_value_by_name_to_not_existing_station_test() ->
+  Monitor = pollution:createMonitor(),
+
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+
+  ?assertError("Coudln't find that station with provided Name", pollution:addValue(?SecondStationName, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1)).
+
+add_new_value_by_coords_to_not_existing_station_test() ->
+  Monitor = pollution:createMonitor(),
+
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+
+  ?assertError("Coudln't find that station with provided X and Y", pollution:addValue(?SecondCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1)).
