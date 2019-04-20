@@ -9,7 +9,9 @@
 -module(pollutionTest).
 -author("ajris").
 
+-include("../src/pollution.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
-simple_test() ->
-  ?assert(true).
+create_monitor_test() ->
+  ?assertEqual(#monitor{}, pollution:createMonitor()).
+
