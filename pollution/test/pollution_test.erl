@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 20. Apr 2019 14:07
 %%%-------------------------------------------------------------------
--module(pollutionTest).
+-module(pollution_test).
 -author("ajris").
 
 -include("../src/pollution.hrl").

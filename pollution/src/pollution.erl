@@ -35,8 +35,7 @@ addStation(Name, {X, Y}, Monitor) ->
         stations = ActualizedStation
       };
     [_] -> ?STATION_ALREADY_EXIST_ERROR
-  end
-.
+  end.
 
 addValue({X, Y}, Date, Type, Value, Monitor) ->
   Stations = Monitor#monitor.stations,
@@ -44,7 +43,7 @@ addValue({X, Y}, Date, Type, Value, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case isGoodType(Type) of
+      case pollution_utils:isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->
@@ -76,7 +75,7 @@ addValue(Name, Date, Type, Value, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case isGoodType(Type) of
+      case pollution_utils:isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->
@@ -100,8 +99,7 @@ addValue(Name, Date, Type, Value, Monitor) ->
 
         false -> ?WRONG_TYPE_SPECIFIED_ERROR
       end
-  end
-.
+  end.
 
 removeValue({X, Y}, Date, Type, Monitor) ->
   Stations = Monitor#monitor.stations,
@@ -109,7 +107,7 @@ removeValue({X, Y}, Date, Type, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case isGoodType(Type) of
+      case pollution_utils:isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->
@@ -139,7 +137,7 @@ removeValue(Name, Date, Type, Monitor) ->
   case ResultStation of
     [] -> ?STATION_NOT_FOUND_ERROR;
     [CurrentStation] ->
-      case isGoodType(Type) of
+      case pollution_utils:isGoodType(Type) of
         true ->
           Measurements = CurrentStation#station.measurements,
           ResultMeasurement = lists:filter(fun(Measurement) ->
@@ -163,11 +161,6 @@ removeValue(Name, Date, Type, Monitor) ->
         false -> ?WRONG_TYPE_SPECIFIED_ERROR
       end
   end.
-
-isGoodType(pm10) -> true;
-isGoodType(pm25) -> true;
-isGoodType(temp) -> true;
-isGoodType(_) -> false.
 
 getOneValue(Type, Station, Date, Monitor) ->
   Stations = Monitor#monitor.stations,
@@ -195,24 +188,18 @@ getStationMean(Type, Station, Monitor) ->
       ResultMeasurement = lists:filter(fun(Measurement) -> (Measurement#measurement.type == Type) end, Measurements),
       if ResultMeasurement == [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
         true ->
-          mean(lists:map(fun(XD) -> XD#measurement.value end, ResultMeasurement))
+          pollution_utils:calculateMean(lists:map(fun(XD) -> XD#measurement.value end, ResultMeasurement))
       end
   end.
 
 getDailyMean(Type, Date, Monitor) ->
   Stations = Monitor#monitor.stations,
   Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
-  FilteredMeasurements = lists:filter(fun(X) -> (isDateEqual(X#measurement.date, Date)) and (X#measurement.type == Type) end, Measurements),
-  mean(lists:map(fun(XD) -> XD#measurement.value end, FilteredMeasurements)).
-
-isDateEqual({FirstDate, _}, {SecondDate, _}) ->
-  FirstDate == SecondDate.
-
-mean([]) -> ?EMPTY_ERROR;
-mean(Values) -> lists:sum(Values) / length(Values).
+  FilteredMeasurements = lists:filter(fun(X) -> (pollution_utils:isDayEqual(X#measurement.date, Date)) and (X#measurement.type == Type) end, Measurements),
+  pollution_utils:calculateMean(lists:map(fun(XD) -> XD#measurement.value end, FilteredMeasurements)).
 
 getDailyAverageDataCount(Date, Monitor) ->
   Stations = Monitor#monitor.stations,
   Measurements = lists:flatmap(fun(X) -> X#station.measurements end, Stations),
-  FilteredMeasurements = lists:filter(fun(X) -> (isDateEqual(X#measurement.date, Date)) end, Measurements),
+  FilteredMeasurements = lists:filter(fun(X) -> (pollution_utils:isDayEqual(X#measurement.date, Date)) end, Measurements),
   lists:flatlength(FilteredMeasurements)/lists:flatlength(Stations).
