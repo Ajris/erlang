@@ -29,7 +29,7 @@ is_measurement_type_test() ->
 
 is_day_equal_test() ->
   ?assertEqual(true, pollution_utils:isDayEqual(?FirstDateTime, ?SecondDateTime)),
-  ?assertEqual(false, pollution_utils:isDayEqual(?FirstDateTime, {{1998, 10, 17},{}})).
+  ?assertEqual(false, pollution_utils:isDayEqual(?FirstDateTime, {{1998, 10, 17}, {}})).
 
 get_station_by_key_test() ->
   Monitor = pollution:createMonitor(),

@@ -107,7 +107,8 @@ getStationMean(Type, Key, Monitor) ->
       Measurements = pollution_utils:getMeasurementsByType(Type, Station),
       case Measurements of
         [] -> ?MEASUREMENT_NOT_FOUND_ERROR;
-        _ -> pollution_utils:calculateMean(lists:map(fun(Measurement) -> Measurement#measurement.value end, Measurements))
+        _ ->
+          pollution_utils:calculateMean(lists:map(fun(Measurement) -> Measurement#measurement.value end, Measurements))
       end
   end.
 
