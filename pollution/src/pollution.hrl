@@ -8,13 +8,6 @@
 %%%-------------------------------------------------------------------
 -author("ajris").
 
--type coords() :: {float(), float()}.
--type measurementType() :: pm10 | pm25 | temp.
-
--record(station, {stationName, stationCoordinates :: coords(), measurements = [] :: [measurement()]}).
--record(measurement, {date :: calendar:datetime(), type::measurementType(), value::float()}).
-
--type measurement() :: #measurement{}.
--type station() :: #station{}.
-
--record(monitor, {stations = [] :: [station()]}).
+-record(station, {stationName, stationCoordinates, measurements = []}).
+-record(measurement, {date, type, value}).
+-record(monitor, {stations = []}).
