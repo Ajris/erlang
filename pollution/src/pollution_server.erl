@@ -89,7 +89,7 @@ loopServer(Monitor) ->
 
 handleResult(Result, Monitor) ->
   case lists:member(Result, ?SPECIFIED_EXCEPTIONS) of
-    true -> io:format("STATION EXISTS"),
+    true -> io:format("Error occured: ~w", [Result]),
       loopServer(Monitor);
     _ ->
       case Result of
