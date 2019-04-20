@@ -8,6 +8,7 @@
 %%%-------------------------------------------------------------------
 -module(pollution).
 -author("ajris").
+-include("pollution.hrl").
 
 %% API
 -export([test/0]).
@@ -20,10 +21,6 @@
 -export([getDailyMean/3]).
 -export([getDailyAverageDataCount/2]).
 
--record(monitor, {stations = []}).
--record(station, {name, coords, measurements = []}).
--record(measurement, {date, type, value}).
--record(coords, {x, y}).
 
 test() ->
   Station = #station{name = "Stacja4", coords = {4, 5}},
