@@ -209,13 +209,14 @@ isGoodType(_) -> false.
 
 getOneValue(Type, Station, Date, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station1) -> (Station1#station.stationName == Station#station.stationName) end, Stations),
+  ResultStation = lists:filter(fun(Station1) ->
+    ((Station1#station.stationName == Station#station.stationName) and (Station1#station.stationCoordinates == Station#station.stationCoordinates)) end, Stations),
   if ResultStation == [] -> erlang:error("No station found");
     true ->
       H = hd(ResultStation),
       Measurements = H#station.measurements,
       ResultMeasurement = lists:filter(fun(Measurement) ->
-        (Measurement#measurement.date == Date) and (Measurement#measurement.type == Type) end, Measurements),
+        ((Measurement#measurement.date == Date) and (Measurement#measurement.type == Type)) end, Measurements),
       if ResultMeasurement == [] -> erlang:error("No measurement found");
         true -> hd(ResultMeasurement)
       end

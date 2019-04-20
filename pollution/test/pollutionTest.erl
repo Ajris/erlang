@@ -123,3 +123,28 @@ remove_not_existing_measurement_by_coords_test() ->
   ?assertError("No measurement found", pollution:removeValue(?FirstCoords, ?SecondDateTime, ?FirstType, Monitor2)),
   ?assertError("No measurement found", pollution:removeValue(?FirstCoords, ?FirstDateTime, ?SecondType, Monitor2)),
   ?assertError("Coudln't find that station with provided X and Y", pollution:removeValue(?SecondCoords, ?FirstDateTime, ?FirstType, Monitor2)).
+
+get_one_existing_value_test() ->
+  Monitor = pollution:createMonitor(),
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+  Station = #station{stationName = ?FirstStationName, stationCoordinates = ?FirstCoords},
+
+  Measurement = pollution:getOneValue(?FirstType, Station, ?FirstDateTime, Monitor2),
+  ?assertEqual(?FirstValue, Measurement#measurement.value),
+  ?assertEqual(?FirstType, Measurement#measurement.type),
+  ?assertEqual(?FirstDateTime, Measurement#measurement.date).
+
+get_one_not_existing_value_test() ->
+  Monitor = pollution:createMonitor(),
+  CurrentStation = #station{stationName = ?FirstStationName, stationCoordinates = ?FirstCoords},
+  WrongNameStation = #station{stationName = ?SecondStationName, stationCoordinates = ?FirstCoords},
+  WrongCoordsStation = #station{stationName = ?FirstStationName, stationCoordinates = ?SecondCoords},
+
+  Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
+  Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
+
+  ?assertError("No station found", pollution:getOneValue(?FirstType, WrongNameStation, ?FirstDateTime, Monitor2)),
+  ?assertError("No station found", pollution:getOneValue(?FirstType, WrongCoordsStation, ?FirstDateTime, Monitor2)),
+  ?assertError("No measurement found", pollution:getOneValue(?FirstType, CurrentStation, ?SecondDateTime, Monitor2)),
+  ?assertError("No measurement found", pollution:getOneValue(?SecondType, CurrentStation, ?FirstDateTime, Monitor2)).
