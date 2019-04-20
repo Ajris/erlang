@@ -23,7 +23,7 @@
 
 
 test() ->
-  Station = #station{name = "Stacja4", coords = {4, 5}},
+  Station = #station{stationName = "Stacja4", stationCoordinates = {4, 5}},
   P = createMonitor(),
   P1 = addStation("Stacja1", {1, 2}, P),
   P2 = addStation("Stacja2", {2, 3}, P1),
@@ -52,10 +52,10 @@ createMonitor() ->
 addStation(Name, {X, Y}, Monitor) ->
   Stations = Monitor#monitor.stations,
   Result = lists:filter(fun(Station) ->
-    (Station#station.coords == {X, Y}) or (Station#station.name == Name) end, Stations),
+    (Station#station.stationCoordinates == {X, Y}) or (Station#station.stationName == Name) end, Stations),
   case Result of
     [] ->
-      Station = #station{name = Name, coords = {X, Y}},
+      Station = #station{stationName = Name, stationCoordinates = {X, Y}},
       ActualizedStation = Monitor#monitor.stations ++ [Station],
       Monitor#monitor{
         stations = ActualizedStation
@@ -67,7 +67,7 @@ addStation(Name, {X, Y}, Monitor) ->
 
 addValue({X, Y}, Date, Type, Value, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.coords == {X, Y}) end, Stations),
+  ResultStation = lists:filter(fun(Station) -> (Station#station.stationCoordinates == {X, Y}) end, Stations),
   case ResultStation of
     [] ->
       erlang:error("Coudln't find that station with provided X and Y");
@@ -102,7 +102,7 @@ addValue({X, Y}, Date, Type, Value, Monitor) ->
 
 addValue(Name, Date, Type, Value, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.name == Name) end, Stations),
+  ResultStation = lists:filter(fun(Station) -> (Station#station.stationName == Name) end, Stations),
   case ResultStation of
     [] ->
       erlang:error("Coudln't find that station with provided X and Y");
@@ -138,7 +138,7 @@ addValue(Name, Date, Type, Value, Monitor) ->
 
 removeValue({X, Y}, Date, Type, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.coords == {X, Y}) end, Stations),
+  ResultStation = lists:filter(fun(Station) -> (Station#station.stationCoordinates == {X, Y}) end, Stations),
   case ResultStation of
     [] ->
       erlang:error("Coudln't find that station with provided X and Y");
@@ -171,7 +171,7 @@ removeValue({X, Y}, Date, Type, Monitor) ->
 
 removeValue(Name, Date, Type, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station) -> (Station#station.name == Name) end, Stations),
+  ResultStation = lists:filter(fun(Station) -> (Station#station.stationName == Name) end, Stations),
   case ResultStation of
     [] ->
       erlang:error("Coudln't find that station with provided X and Y");
@@ -210,7 +210,7 @@ isGoodType(_) -> false.
 
 getOneValue(Type, Station, Date, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station1) -> (Station1#station.name == Station#station.name) end, Stations),
+  ResultStation = lists:filter(fun(Station1) -> (Station1#station.stationName == Station#station.stationName) end, Stations),
   if ResultStation == [] -> erlang:error("No station found");
     true ->
       H = hd(ResultStation),
@@ -224,7 +224,7 @@ getOneValue(Type, Station, Date, Monitor) ->
 
 getStationMean(Type, Station, Monitor) ->
   Stations = Monitor#monitor.stations,
-  ResultStation = lists:filter(fun(Station1) -> (Station1#station.name == Station#station.name) end, Stations),
+  ResultStation = lists:filter(fun(Station1) -> (Station1#station.stationName == Station#station.stationName) end, Stations),
   if ResultStation == [] -> erlang:error("No station found");
     true ->
       H = hd(ResultStation),
