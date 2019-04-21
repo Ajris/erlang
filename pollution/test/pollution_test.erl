@@ -119,7 +119,7 @@ get_one_existing_value_test() ->
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
   Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
 
-  Measurement = pollution:getOneValue(?FirstType, ?FirstStationName, ?FirstDateTime, Monitor2),
+  Measurement = pollution:getOneValue(?FirstStationName, ?FirstDateTime, ?FirstType, Monitor2),
   ?assertEqual(?FirstValue, Measurement#measurement.value),
   ?assertEqual(?FirstType, Measurement#measurement.type),
   ?assertEqual(?FirstDateTime, Measurement#measurement.date).
@@ -130,10 +130,10 @@ get_one_not_existing_value_test() ->
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
   Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
 
-  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getOneValue(?FirstType, ?SecondStationName, ?FirstDateTime, Monitor2)),
-  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getOneValue(?FirstType, ?SecondCoords, ?FirstDateTime, Monitor2)),
-  ?assertEqual(?MEASUREMENT_NOT_FOUND_ERROR, pollution:getOneValue(?FirstType, ?FirstStationName, ?SecondDateTime, Monitor2)),
-  ?assertEqual(?MEASUREMENT_NOT_FOUND_ERROR, pollution:getOneValue(?SecondType, ?FirstCoords, ?FirstDateTime, Monitor2)).
+  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getOneValue(?SecondStationName, ?FirstDateTime, ?FirstType, Monitor2)),
+  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getOneValue(?SecondCoords, ?FirstDateTime, ?FirstType, Monitor2)),
+  ?assertEqual(?MEASUREMENT_NOT_FOUND_ERROR, pollution:getOneValue(?FirstStationName, ?SecondDateTime, ?FirstType, Monitor2)),
+  ?assertEqual(?MEASUREMENT_NOT_FOUND_ERROR, pollution:getOneValue(?FirstCoords, ?FirstDateTime, ?SecondType, Monitor2)).
 
 get_station_mean_existing_station_test() ->
   Monitor = pollution:createMonitor(),
@@ -141,16 +141,16 @@ get_station_mean_existing_station_test() ->
   Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
   Monitor3 = pollution:addValue(?FirstCoords, ?SecondDateTime, ?FirstType, ?SecondValue, Monitor2),
 
-  ?assertEqual(7.5, pollution:getStationMean(?FirstType, ?FirstStationName, Monitor3)).
+  ?assertEqual(7.5, pollution:getStationMean(?FirstStationName, ?FirstType, Monitor3)).
 
 get_station_mean_not_existing_station_test() ->
   Monitor = pollution:createMonitor(),
   Monitor1 = pollution:addStation(?FirstStationName, ?FirstCoords, Monitor),
   Monitor2 = pollution:addValue(?FirstCoords, ?FirstDateTime, ?FirstType, ?FirstValue, Monitor1),
 
-  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getStationMean(?FirstType, ?SecondStationName, Monitor2)),
-  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getStationMean(?FirstType, ?SecondCoords, Monitor2)),
-  ?assertEqual(?MEASUREMENT_NOT_FOUND_ERROR, pollution:getStationMean(?SecondType, ?FirstStationName, Monitor2)).
+  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getStationMean(?SecondStationName, ?FirstType, Monitor2)),
+  ?assertEqual(?STATION_NOT_FOUND_ERROR, pollution:getStationMean(?SecondCoords, ?FirstType, Monitor2)),
+  ?assertEqual(?MEASUREMENT_NOT_FOUND_ERROR, pollution:getStationMean(?FirstStationName, ?SecondType, Monitor2)).
 
 get_daily_mean_existing_station_test() ->
   Monitor = pollution:createMonitor(),

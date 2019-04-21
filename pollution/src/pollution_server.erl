@@ -101,11 +101,13 @@ handleResult(Result, Monitor, PID) ->
       loopServer(Monitor);
     _ ->
       case Result of
-        {_, _} -> io:format("Got new monitor");
-        _ -> io:format("Got value ~w", [Result])
-      end,
-      PID ! Result,
-      loopServer(Result)
+        {_, _} -> io:format("Got new monitor"),
+          PID ! Result,
+          loopServer(Result);
+        _ -> io:format("Got value ~w", [Result]),
+          PID ! Result,
+          loopServer(Monitor)
+      end
   end.
 
 returnValue() ->

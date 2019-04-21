@@ -87,7 +87,7 @@ removeValue(Key, Date, Type, Monitor) ->
       end
   end.
 
-getOneValue(Type, Key, Date, Monitor) ->
+getOneValue(Key, Date, Type, Monitor) ->
   Stations = pollution_utils:getStationsByKey(Key, Monitor),
   case Stations of
     [] -> ?STATION_NOT_FOUND_ERROR;
@@ -99,7 +99,7 @@ getOneValue(Type, Key, Date, Monitor) ->
       end
   end.
 
-getStationMean(Type, Key, Monitor) ->
+getStationMean(Key, Type, Monitor) ->
   Stations = pollution_utils:getStationsByKey(Key, Monitor),
   case Stations of
     [] -> ?STATION_NOT_FOUND_ERROR;
