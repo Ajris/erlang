@@ -11,8 +11,11 @@
 
 -include("pollution_header.hrl").
 
+-behavior(gen_server).
+
+-define(SERVER, ?MODULE).
+
 %% API
--export([start/0]).
 -export([stop/0]).
 -export([addStation/2]).
 -export([addValue/4]).
@@ -21,96 +24,106 @@
 -export([getStationMean/2]).
 -export([getDailyMean/2]).
 -export([getDailyAverageDataCount/1]).
+-export([start_link/0]).
+-export([init/1]).
+-export([terminate/2]).
+-export([handle_call/3]).
+-export([handle_cast/2]).
+-export([handle_info/2]).
+-export([code_change/3]).
 
-start() ->
-  PID = spawn(fun() -> init() end),
-  register(server, PID),
-  io:format("SERVER STARTED").
+start_link() ->
+  gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
-stop() ->
-  server ! {stop, self()},
-  io:format("KONIEC").
+stop()->
+  gen_server:stop(?SERVER).
 
-init() ->
-  Monitor = pollution:createMonitor(),
-  loopServer(Monitor).
+terminate(Reason, State) ->
+  io:format("Server terminated REASON: ~p, STATE ~p~n]", [Reason, State]).
+
+init([]) ->
+  process_flag(trap_exit, true),
+  io:format("~p (~p) starting... ~n", [{local, ?SERVER}, self()]),
+  State = #monitor{},
+  {ok, State}.
 
 addStation(Name, Position) ->
-  server ! {addStation, Name, Position, self()},
-  returnValue().
+  gen_server:call(?MODULE, {addStation, Name, Position}).
 
 addValue(Key, Date, Type, Value) ->
-  server ! {addValue, Key, Date, Type, Value, self()},
-  returnValue().
+  gen_server:call(?MODULE, {addValue, Key, Date, Type, Value}).
 
 removeValue(Key, Date, Type) ->
-  server ! {removeValue, Key, Date, Type, self()},
-  returnValue().
+  gen_server:call(?MODULE, {removeValue, Key, Date, Type, self()}).
 
 getOneValue(Key, Date, Type) ->
-  server ! {getOneValue, Key, Date, Type, self()},
-  returnValue().
+  gen_server:call(?MODULE, {getOneValue, Key, Date, Type, self()}).
 
 getStationMean(Key, Type) ->
-  server ! {getStationMean, Key, Type, self()},
-  returnValue().
+  gen_server:call(?MODULE, {getStationMean, Key, Type, self()}).
 
 getDailyMean(Type, Date) ->
-  server ! {getDailyMean, Type, Date, self()},
-  returnValue().
+  gen_server:call(?MODULE, {getDailyMean, Type, Date, self()}).
 
 getDailyAverageDataCount(Date) ->
-  server ! {getDailyAverageDataCount, Date, self()},
-  returnValue().
+  gen_server:call(?MODULE, {getDailyAverageDataCount, Date, self()}).
 
-loopServer(Monitor) ->
-  receive
-    {addStation, Name, Position, PID} -> NewMonitor = pollution:addStation(Name, Position, Monitor),
-      handleResult(NewMonitor, Monitor, PID);
+handle_call({addStation, N, C}, _From, State) ->
+  case pollution:addStation(N, C, State) of
+    #monitor{} = M ->
+      {reply, ok, M};
+    Failed ->
+      {reply, Failed, State}
+  end;
 
-    {addValue, Key, Date, Type, Value, PID} ->
-      NewMonitor = pollution:addValue(Key, Date, Type, Value, Monitor),
-      handleResult(NewMonitor, Monitor, PID);
+handle_call({addValue, K, Tm, Tp, V}, _From, State) ->
+  case pollution:addValue(K, Tm, Tp, V, State) of
+    #monitor{} = M ->
+      {reply, ok, M};
+    Failed ->
+      {reply, Failed, State}
+  end;
 
-    {removeValue, Key, Date, Type, PID} ->
-      NewMonitor = pollution:removeValue(Key, Date, Type, Monitor),
-      handleResult(NewMonitor, Monitor, PID);
+handle_call({removeValue, K, Tm, Tp}, _From, State) ->
+  case pollution:removeValue(K, Tm, Tp, State) of
+    #monitor{} = M ->
+      {reply, ok, M};
+    Failed ->
+      {reply, Failed, State}
+  end;
 
-    {getOneValue, Key, Date, Type, PID} ->
-      Value = pollution:getOneValue(Key, Date, Type, Monitor),
-      handleResult(Value, Monitor, PID);
+handle_call({getOneValue, K, Tm, Tp}, _From, State) ->
+  case pollution:getOneValue(K, Tm, Tp, State) of
+    Value when is_float(Value) ->
+      {reply, Value, State};
+    Failed ->
+      {reply, Failed, State}
+  end;
 
-    {getStationMean, Key, Type, PID} -> Value = pollution:getStationMean(Key, Type, Monitor),
-      handleResult(Value, Monitor, PID);
+handle_call({getStationMean, K, Tp}, _From, State) ->
+  case pollution:getStationMean(K, Tp, State) of
+    Value when is_float(Value) ->
+      {reply, Value, State};
+    Failed ->
+      {reply, Failed, State}
+  end;
 
-    {getDailyMean, Type, Date, PID} -> Value = pollution:getDailyMean(Type, Date, Monitor),
-      handleResult(Value, Monitor, PID);
+handle_call({getDailyMean, Tm, Tp}, _From, State) ->
+  case pollution:getDailyMean(Tm, Tp, State) of
+    Value when is_float(Value) ->
+      {reply, Value, State};
+    Failed ->
+      {reply, Failed, State}
+  end;
 
-    {getDailyAverageDataCount, Date, PID} -> Value = pollution:getDailyAverageDataCount(Date, Monitor),
-      handleResult(Value, Monitor, PID);
+handle_call(_Request, _From, State) ->
+  {reply, {error, invalid_request}, State}.
 
-    {stop, PID} -> PID ! ok;
+handle_cast(_Request, State) ->
+  {noreply, State}.
 
-    _ -> loopServer(Monitor)
-  end.
+handle_info(_Request, State) ->
+  {noreply, State}.
 
-handleResult(Result, Monitor, PID) ->
-  case lists:member(Result, ?SPECIFIED_EXCEPTIONS) of
-    true -> io:format("Error occured: ~w", [Result]),
-      PID ! Result,
-      loopServer(Monitor);
-    _ ->
-      case Result of
-        {_, _} -> io:format("Got new monitor"),
-          PID ! Result,
-          loopServer(Result);
-        _ -> io:format("Got value ~w", [Result]),
-          PID ! Result,
-          loopServer(Monitor)
-      end
-  end.
-
-returnValue() ->
-  receive
-    V -> V
-  end.
+code_change(_Arg0, _Arg1, _Arg2) ->
+  erlang:error(not_implemented).
